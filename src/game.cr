@@ -19,7 +19,6 @@ module FindingMaya
     end
 
     @scene : Scene = Scene::MAIN_MENU
-    @selected_option : Int32 = 0
     @player : Player? = nil
 
     def initialize
@@ -30,52 +29,47 @@ module FindingMaya
     end
 
     def run
-      until Raylib.close_window?
-        Raylib.begin_drawing
-        case @scene
-        when Scene::MAIN_MENU
-          main_menu
-        when Scene::CHAR_CREATION
-          # char_creation
-        when Scene::LEVEL1
-          # level1
-        when Scene::LEVEL2
-          # level2
-        when Scene::LEVEL3
-          # level3
-        when Scene::GAME_OVER
-          # game_over
-        end
-        Raylib.end_drawing
-      end
+      main_menu
     end
 
     def main_menu
-      # Start the Main Menu Class
-      # If the user clicks start, change the scene to char creation
-      # If the user clicks quit, close the window
-      Raylib.draw_texture(@background, 0, 0, Raylib::WHITE)
-      Raylib.draw_text("Finding Maya", 300, 100, 100, Raylib::WHITE)
-      OPTIONS.each_with_index do |option, index|
-        if index == @selected_option
-          Raylib.draw_text(option, 300, 300 + (index * 50), 50, Raylib::RED)
-        else
-          Raylib.draw_text(option, 300, 300 + (index * 50), 50, Raylib::BLACK)
-        end
-      end
-      if Raylib.key_pressed?(Raylib::KeyboardKey::Down) && @selected_option < OPTIONS.size - 1
-        @selected_option += 1
-      elsif Raylib.key_pressed?(Raylib::KeyboardKey::Up) && @selected_option > 0
-        @selected_option -= 1
-      elsif Raylib.key_pressed?(Raylib::KeyboardKey::Enter)
-        case @selected_option
-        when 0
-          # Start the game and go to charcter creation
-          char_creation
-        when 1
-          # Quit the game
+      selected_option = 0
+
+      loop do
+        Raylib.begin_drawing
+        if Raylib.close_window? || Raylib.key_pressed?(Raylib::KeyboardKey::Escape)
           stop
+          break
         end
+
+        # Start the Main Menu Class
+        # If the user clicks start, change the scene to char creation
+        # If the user clicks quit, close the window
+        Raylib.draw_texture(@background, 0, 0, Raylib::WHITE)
+        Raylib.draw_text("Finding Maya", 300, 100, 100, Raylib::WHITE)
+        OPTIONS.each_with_index do |option, index|
+          if index == selected_option
+            Raylib.draw_text(option, 300, 300 + (index * 50), 50, Raylib::RED)
+          else
+            Raylib.draw_text(option, 300, 300 + (index * 50), 50, Raylib::WHITE)
+          end
+        end
+        if Raylib.key_pressed?(Raylib::KeyboardKey::Down) && selected_option < OPTIONS.size - 1
+          selected_option += 1
+        elsif Raylib.key_pressed?(Raylib::KeyboardKey::Up) && selected_option > 0
+          selected_option -= 1
+        elsif Raylib.key_pressed?(Raylib::KeyboardKey::Enter)
+          case selected_option
+          when 0
+            # Start the game and go to charcter creation
+            char_creation
+          when 1
+            # Quit the game
+            stop
+            break
+          end
+        end
+        Raylib.end_drawing
       end
     end
 
@@ -89,8 +83,8 @@ module FindingMaya
       # Create a buffer to hold the entered name
       buffer = Bytes.new(256)
 
-      dialog_width = 300
-      dialog_height = 150
+      dialog_width = 600
+      dialog_height = 300
 
       input_box_bounds = Raylib::Rectangle.new(
         x: SCREEN_WIDTH / 2,
@@ -101,18 +95,28 @@ module FindingMaya
       # Show the input box
       loop do
         Raylib.begin_drawing
+        Raygui.set_style(Raygui::Control::Default, Raygui::DefaultProperty::TextSize, 25)
         Raylib.clear_background(Raylib::WHITE)
         Raylib.draw_texture(@background, 0, 0, Raylib::WHITE)
-        Raygui.text_input_box(input_box_bounds, "Enter Your Name:", "", "Accept\x00Cancel\x00", buffer.to_unsafe, 256, nil)
-        Raylib.end_drawing
-        break if Raylib.key_pressed?(Raylib::KeyboardKey::Enter)
-        if Raylib.close_window?
+        # Button positions are based on the ";" character
+        # Each button will return a value based on its position, with first giving a 1, second giving a 2, etc.
+        # For no button pressed we get -1.
+        result = Raygui.text_input_box(input_box_bounds, "Enter Your Name:", "This is going to be the name of your charcter", "Ok;Cancel", buffer.to_unsafe, 256, nil)
+        if result == 1
+          # User clicked ok
+          break
+        elsif result == 2
+          # User clicked cancel
           return
         end
+        Raylib.end_drawing
+        break if Raylib.key_pressed?(Raylib::KeyboardKey::Enter)
+        return if Raylib.close_window?
       end
       player = Player.new(String.new(buffer))
 
       done = false
+      selected_option = 0
       until Raylib.close_window?
         Raylib.begin_drawing
         Raylib.clear_background(Raylib::WHITE)
@@ -133,7 +137,7 @@ module FindingMaya
 
         # Allow player to allocate points
         if Raylib.key_pressed?(Raylib::KeyboardKey::Down) && points_to_allocate > 0
-          case @selected_option
+          case selected_option
           when 0
             player.agility += 1
           when 1
@@ -145,7 +149,7 @@ module FindingMaya
           end
           points_to_allocate -= 1
         elsif Raylib.key_pressed?(Raylib::KeyboardKey::Up)
-          case @selected_option
+          case selected_option
           when 0
             if player.agility > 0
               player.agility -= 1
@@ -170,12 +174,12 @@ module FindingMaya
         end
 
         # Handle input for navigation
-        if Raylib.key_pressed?(Raylib::KeyboardKey::Down) && @selected_option < 3
-          @selected_option += 1
-        elsif Raylib.key_pressed?(Raylib::KeyboardKey::Up) && @selected_option > 0
-          @selected_option -= 1
+        if Raylib.key_pressed?(Raylib::KeyboardKey::Down) && selected_option < 3
+          selected_option += 1
+        elsif Raylib.key_pressed?(Raylib::KeyboardKey::Up) && selected_option > 0
+          selected_option -= 1
         elsif Raylib.key_pressed?(Raylib::KeyboardKey::Enter)
-          case @selected_option
+          case selected_option
           when 4
             # Save player and proceed to the next scene (e.g., level 1)
             # You'll need to implement this part
