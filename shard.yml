@@ -1,0 +1,17 @@
+name: finding_maya
+version: 0.1.0
+
+authors:
+  - Bar Hofesh <bar.hofesh@gmail.com>
+
+targets:
+  finding_maya:
+    main: src/finding_maya.cr
+
+dependencies:
+  raylib-cr:
+    github: sol-vin/raylib-cr
+
+crystal: 1.9.2
+
+license: MIT
