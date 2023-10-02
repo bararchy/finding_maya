@@ -1,3 +1,5 @@
+require "./entity.cr"
+require "./entity/*"
 require "./player.cr"
 require "./level.cr"
 
@@ -222,19 +224,22 @@ module FindingMaya
 
       # def initialize(@name, @description, @x, @y, @texture, @collusion = true)
       # end
-      test = Entity.new(
+      test = Table.new(
         name: "Table",
         description: "A table, Nothing special about it, it's a bit dirty, maybe you should clean it",
-        x: 200,
-        y: 200,
+        x: 500,
+        y: 500,
         texture: Raylib.load_texture("assets/images/table.png"),
         collusion: true
       )
 
+      enteties = Array(Entity).new
+      enteties << test
+
       level = Level.new(
         background: Raylib.load_texture("assets/images/level1.png"),
         player: player,
-        entities: [test]
+        entities: enteties
       )
       level.play
     end

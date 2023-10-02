@@ -2,12 +2,13 @@ require "./player.cr"
 
 # require "./npc.cr"
 # require "./item.cr"
-require "./entity.cr"
 
 module FindingMaya
   class Level
     # this class will implement the generic logic needed for all levels
     alias Element = Entity # NPC
+    PLAYER_WALK_SPEED    = 5
+    INTERACTION_DISTANCE = 10
 
     getter player : Player
 
@@ -63,9 +64,75 @@ module FindingMaya
           draw
           Raylib.end_drawing
         end
+        # We use the space key to interact with the elements
+        if Raylib.key_pressed?(Raylib::KeyboardKey::Space)
+          interact
+        end
         break if Raylib.key_pressed?(Raylib::KeyboardKey::Escape)
         break if Raylib.close_window?
       end
+    end
+
+    def interact
+      # This method will check if the player is colliding with an element
+      # If the player is colliding with an element, it will call the interact method of the element
+      # If the player is not colliding with an element, it will do nothing
+      if element = colliding_with
+        element.interact
+      end
+    end
+
+    def colliding_with : Element?
+      # This method will check all the elements in the level and return the first element that is colliding with the player
+      # It will be used to check for interactions, like talking to an NPC or picking up an item.
+      # Note that we do not allow the player to acctually collide with an element is shown in the move_player method
+      # So we will need to check the surrounding elements to see if the player is colliding with them
+      # We will check 5 pixels in each direction
+      # We will check the @all_objects array and return the first element that is colliding with the player
+      # If no element is colliding with the player we will return nil
+
+      # First, let's see if the player will even be colliding with an element, the "area" will be INTERACTION_DISTANCE
+      @all_objects.each do |element|
+        # Now we need to move the player to the future position
+        old_x = @player.x
+        old_y = @player.y
+        # we need to move the player 4 times for each element to check for the collusion
+        # we will move the player INTERACTION_DISTANCE pixels in each direction
+        # we will move the player up
+        @player.move_by(y: -INTERACTION_DISTANCE)
+        if Raylib.check_collision_recs?(@player.rectangle, element.rectangle)
+          # Now we restore the player position
+          @player.move_to(x: old_x, y: old_y)
+          return element
+        end
+        # we will move the player down
+        @player.move_by(y: INTERACTION_DISTANCE)
+        if Raylib.check_collision_recs?(@player.rectangle, element.rectangle)
+          # Now we restore the player position
+          @player.move_to(x: old_x, y: old_y)
+          return element
+        end
+        # we will move the player left
+        @player.move_by(x: -INTERACTION_DISTANCE)
+        if Raylib.check_collision_recs?(@player.rectangle, element.rectangle)
+          # Now we restore the player position
+          @player.move_to(x: old_x, y: old_y)
+          return element
+        end
+        # we will move the player right
+        @player.move_by(x: INTERACTION_DISTANCE)
+        if Raylib.check_collision_recs?(@player.rectangle, element.rectangle)
+          # Now we restore the player position
+          @player.move_to(x: old_x, y: old_y)
+          return element
+        end
+        # Now we restore the player position
+        @player.move_to(x: old_x, y: old_y)
+      end
+
+      # If we get here, it means that the player is not colliding with any element
+      # So we return nil
+      nil
     end
 
     def colliding?(x : Int32 = 0, y : Int32 = 0) : Bool
@@ -88,29 +155,29 @@ module FindingMaya
       # use the max_x and max_y properties to determine the edge of the map
       # the position property is an instance of the Position class
       while Raylib.key_down?(Raylib::KeyboardKey::Up)
-        unless (player.y - 5 <= @min_y) || colliding?(y: -5)
-          player.move_by(y: -5)
+        unless (player.y - PLAYER_WALK_SPEED <= @min_y) || colliding?(y: -PLAYER_WALK_SPEED)
+          player.move_by(y: -PLAYER_WALK_SPEED)
         end
         player.last_direction = "right"
         yield
       end
       while Raylib.key_down?(Raylib::KeyboardKey::Down)
-        unless (player.y + 5 >= @max_y) || colliding?(y: 5)
-          player.move_by(y: 5)
+        unless (player.y + PLAYER_WALK_SPEED >= @max_y) || colliding?(y: PLAYER_WALK_SPEED)
+          player.move_by(y: PLAYER_WALK_SPEED)
         end
         player.last_direction = "right"
         yield
       end
       while Raylib.key_down?(Raylib::KeyboardKey::Left)
-        unless player.x - 5 <= @min_x || colliding?(x: -5)
-          player.move_by(x: -5)
+        unless player.x - PLAYER_WALK_SPEED <= @min_x || colliding?(x: -PLAYER_WALK_SPEED)
+          player.move_by(x: -PLAYER_WALK_SPEED)
         end
         player.last_direction = "left"
         yield
       end
       while Raylib.key_down?(Raylib::KeyboardKey::Right)
-        unless player.x + 5 >= @max_x || colliding?(x: 5)
-          player.move_by(x: 5)
+        unless player.x + PLAYER_WALK_SPEED >= @max_x || colliding?(x: PLAYER_WALK_SPEED)
+          player.move_by(x: PLAYER_WALK_SPEED)
         end
         player.last_direction = "right"
         yield

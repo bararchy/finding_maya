@@ -1,5 +1,5 @@
 module FindingMaya
-  class Entity
+  abstract class Entity
     # This class respresents an Entity in the game. It is a base class for all
     # other entities.
 
@@ -27,6 +27,10 @@ module FindingMaya
     def draw
       Raylib.draw_texture(@texture, @x, @y, Raylib::WHITE)
     end
+
+    # This method is called when the player interacts with the entity.
+    # It should be overridden by subclasses.
+    abstract def interact
 
     def update(x : Int32, y : Int32)
       @x = x
