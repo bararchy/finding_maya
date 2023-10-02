@@ -6,7 +6,7 @@ require "./level.cr"
 module FindingMaya
   class Game
     # Menu Constants
-    BACKGROUND_IMAGE = "assets/images/big_background.png"
+    BACKGROUND_IMAGE = Path["assets", "images", "big_background.png"].to_native.to_s
     OPTIONS          = ["New Game", "Exit"]
 
     enum Scene
@@ -219,7 +219,7 @@ module FindingMaya
         description: "A table, Nothing special about it, it's a bit dirty, maybe you should clean it",
         x: 700,
         y: 700,
-        texture: Raylib.load_texture("assets/images/table.png"),
+        texture: Raylib.load_texture(Path["assets", "images", "table.png"].to_native.to_s),
         collision: true
       )
 
@@ -227,7 +227,7 @@ module FindingMaya
       enteties << test
 
       level = Level.new(
-        background: Raylib.load_texture("assets/images/level1.png"),
+        background: Raylib.load_texture(Path["assets", "images", "level1.png"].to_native.to_s),
         player: player,
         entities: enteties
       )

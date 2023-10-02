@@ -29,9 +29,9 @@ module FindingMaya
     getter rectangle : Raylib::Rectangle
 
     def initialize(@name : String)
-      @player_texture_left = Raylib.load_texture("assets/images/player/player_left.png")
-      @player_texture_right = Raylib.load_texture("assets/images/player/player_right.png")
-      @player_texture_idle = Raylib.load_texture("assets/images/player/player_idle.png")
+      @player_texture_left = Raylib.load_texture(Path["assets", "images", "player", "player_left.png"].to_native.to_s)
+      @player_texture_right = Raylib.load_texture(Path["assets", "images", "player", "player_right.png"].to_native.to_s)
+      @player_texture_idle = Raylib.load_texture(Path["assets", "images", "player", "player_idle.png"].to_native.to_s)
       @frame_counter = 0
       @rectangle = Raylib::Rectangle.new(x: @x, y: @y, width: @player_texture_idle.width, height: @player_texture_idle.height)
     end
