@@ -1,10 +1,8 @@
 require "./player.cr"
+require "./level.cr"
 
 module FindingMaya
   class Game
-    SCREEN_WIDTH  = Raylib.get_screen_width
-    SCREEN_HEIGHT = Raylib.get_screen_height
-
     # Menu Constants
     BACKGROUND_IMAGE = "assets/images/big_background.png"
     OPTIONS          = ["New Game", "Exit"]
@@ -29,7 +27,25 @@ module FindingMaya
     end
 
     def run
-      main_menu
+      loop do
+        break if Raylib.close_window?
+        break if Raylib.key_pressed?(Raylib::KeyboardKey::Escape)
+        case @scene
+        when Scene::MAIN_MENU
+          main_menu
+        when Scene::CHAR_CREATION
+          char_creation
+        when Scene::LEVEL1
+          level1
+        when Scene::LEVEL2
+          # level2
+        when Scene::LEVEL3
+          # level3
+        when Scene::GAME_OVER
+          # game_over
+        end
+      end
+      stop
     end
 
     def main_menu
@@ -63,6 +79,7 @@ module FindingMaya
           when 0
             # Start the game and go to charcter creation
             char_creation
+            break
           when 1
             # Quit the game
             stop
@@ -93,51 +110,58 @@ module FindingMaya
         height: dialog_height
       )
       # Show the input box
-      loop do
-        Raylib.begin_drawing
-        Raygui.set_style(Raygui::Control::Default, Raygui::DefaultProperty::TextSize, 25)
-        Raylib.clear_background(Raylib::WHITE)
-        Raylib.draw_texture(@background, 0, 0, Raylib::WHITE)
-        # Button positions are based on the ";" character
-        # Each button will return a value based on its position, with first giving a 1, second giving a 2, etc.
-        # For no button pressed we get -1.
-        result = Raygui.text_input_box(input_box_bounds, "Enter Your Name:", "This is going to be the name of your charcter", "Ok;Cancel", buffer.to_unsafe, 256, nil)
-        if result == 1
-          # User clicked ok
-          break
-        elsif result == 2
-          # User clicked cancel
-          return
-        end
-        Raylib.end_drawing
-        break if Raylib.key_pressed?(Raylib::KeyboardKey::Enter)
-        return if Raylib.close_window?
-      end
-      player = Player.new(String.new(buffer))
+      # texture : Raylib::Texture2d, text : String, x : Int32, y : Int32, clear_background : Bool = true
+      player_name = FindingMaya.user_text_input_window(
+        texture: @background,
+        text: "Enter Your Name:",
+        x: (SCREEN_WIDTH / 2).to_i,
+        y: (SCREEN_HEIGHT / 2).to_i
+      )
 
-      done = false
-      selected_option = 0
-      until Raylib.close_window?
+      player = Player.new(player_name)
+
+      options = ["Agility", "Strength", "Intelligence", "Charisma", "Done"]
+      selected = 0
+      loop do
+        return if Raylib.key_pressed?(Raylib::KeyboardKey::Escape)
+
         Raylib.begin_drawing
         Raylib.clear_background(Raylib::WHITE)
         Raylib.draw_texture(@background, 0, 0, Raylib::WHITE)
 
         # Display instructions
-        Raylib.draw_text("Allocate Points", 300, 100, 30, Raylib::BLACK)
-        Raylib.draw_text("Name: #{player.name}", 300, 150, 20, Raylib::BLACK)
+        Raylib.draw_text("Allocate Points", 300, 100, 40, Raylib::WHITE)
+        Raylib.draw_text("Name: #{player.name}", 300, 150, 20, Raylib::WHITE)
+        # Display available stat points
+        Raylib.draw_text("Points Remaining: #{points_to_allocate}", 300, 200, 20, Raylib::WHITE)
 
         # Display stat points and values
-        Raylib.draw_text("Agility: #{player.agility}", 300, 200, 20, Raylib::BLACK)
-        Raylib.draw_text("Strength: #{player.strength}", 300, 250, 20, Raylib::BLACK)
-        Raylib.draw_text("Intelligence: #{player.intelligence}", 300, 300, 20, Raylib::BLACK)
-        Raylib.draw_text("Charisma: #{player.charisma}", 300, 350, 20, Raylib::BLACK)
-
-        # Display available stat points
-        Raylib.draw_text("Points Remaining: #{points_to_allocate}", 300, 400, 20, Raylib::BLACK)
+        # Color the selected option red
+        options.each_with_index do |option, index|
+          # show the value of the stat using the player.#{stat} method unless it's done
+          if index == selected
+            unless option == "Done"
+              Raylib.draw_text("#{option}: #{player.send(option.downcase)}", 300, 250 + (index * 50), 20, Raylib::RED)
+            else
+              Raylib.draw_text("#{option}", 300, 250 + (index * 50), 20, Raylib::RED)
+            end
+          else
+            unless option == "Done"
+              Raylib.draw_text("#{option}: #{player.send(option.downcase)}", 300, 250 + (index * 50), 20, Raylib::WHITE)
+            else
+              Raylib.draw_text("#{option}", 300, 250 + (index * 50), 20, Raylib::WHITE)
+            end
+          end
+        end
 
         # Allow player to allocate points
-        if Raylib.key_pressed?(Raylib::KeyboardKey::Down) && points_to_allocate > 0
-          case selected_option
+        if Raylib.key_pressed?(Raylib::KeyboardKey::Down) && selected < (options.size - 1)
+          selected += 1
+        elsif Raylib.key_pressed?(Raylib::KeyboardKey::Up) && selected > 0
+          selected -= 1
+        elsif Raylib.key_pressed?(Raylib::KeyboardKey::Right) && points_to_allocate > 0
+          # Add a point to the chosen option
+          case selected
           when 0
             player.agility += 1
           when 1
@@ -148,8 +172,9 @@ module FindingMaya
             player.charisma += 1
           end
           points_to_allocate -= 1
-        elsif Raylib.key_pressed?(Raylib::KeyboardKey::Up)
-          case selected_option
+        elsif Raylib.key_pressed?(Raylib::KeyboardKey::Left)
+          # Remove a point from the chosen option
+          case selected
           when 0
             if player.agility > 0
               player.agility -= 1
@@ -173,28 +198,45 @@ module FindingMaya
           end
         end
 
-        # Handle input for navigation
-        if Raylib.key_pressed?(Raylib::KeyboardKey::Down) && selected_option < 3
-          selected_option += 1
-        elsif Raylib.key_pressed?(Raylib::KeyboardKey::Up) && selected_option > 0
-          selected_option -= 1
-        elsif Raylib.key_pressed?(Raylib::KeyboardKey::Enter)
-          case selected_option
-          when 4
-            # Save player and proceed to the next scene (e.g., level 1)
-            # You'll need to implement this part
-            puts "Player Created! Proceeding to Level 1..."
-            break
-          when 5
-            # Go back to the main menu
-            @scene = Scene::MAIN_MENU
-            break
-          end
+        # Break the loop if selected is on done and points_to_allocate is 0 and the enter key is pressed
+        if Raylib.key_pressed?(Raylib::KeyboardKey::Enter) && selected == 4 && points_to_allocate == 0
+          break
         end
-
         Raylib.end_drawing
       end
+      @scene = Scene::LEVEL1
       @player = player
+    end
+
+    def level1
+      return unless player = @player
+      # Here we will handle the first level, the Level class exists in level.cr and expects the following:
+      #   getter name : String
+      # getter description : String
+      # property x : Int32
+      # property y : Int32
+      # getter? collusion : Bool
+
+      # # Set the texture for the entity
+      # @texture : Raylib::Texture2D
+
+      # def initialize(@name, @description, @x, @y, @texture, @collusion = true)
+      # end
+      test = Entity.new(
+        name: "Table",
+        description: "A table, Nothing special about it, it's a bit dirty, maybe you should clean it",
+        x: 200,
+        y: 200,
+        texture: Raylib.load_texture("assets/images/table.png"),
+        collusion: true
+      )
+
+      level = Level.new(
+        background: Raylib.load_texture("assets/images/level1.png"),
+        player: player,
+        entities: [test]
+      )
+      level.play
     end
 
     def stop

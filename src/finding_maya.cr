@@ -1,6 +1,8 @@
 require "raylib-cr"
 require "raylib-cr/raygui"
 
+require "./constants.cr"
+require "./helpers/*"
 require "./game.cr"
 
 module FindingMaya
