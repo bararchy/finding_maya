@@ -7,7 +7,7 @@ module FindingMaya
   class Level
     # this class will implement the generic logic needed for all levels
     alias Element = Entity # NPC
-    PLAYER_WALK_SPEED    = 5
+    PLAYER_WALK_SPEED    =  5
     INTERACTION_DISTANCE = 10
 
     getter player : Player
@@ -96,7 +96,7 @@ module FindingMaya
         # Now we need to move the player to the future position
         old_x = @player.x
         old_y = @player.y
-        # we need to move the player 4 times for each element to check for the collusion
+        # we need to move the player 4 times for each element to check for the collision
         # we will move the player INTERACTION_DISTANCE pixels in each direction
         # we will move the player up
         @player.move_by(y: -INTERACTION_DISTANCE)

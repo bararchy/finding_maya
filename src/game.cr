@@ -212,25 +212,15 @@ module FindingMaya
 
     def level1
       return unless player = @player
-      # Here we will handle the first level, the Level class exists in level.cr and expects the following:
-      #   getter name : String
-      # getter description : String
-      # property x : Int32
-      # property y : Int32
-      # getter? collusion : Bool
-
-      # # Set the texture for the entity
-      # @texture : Raylib::Texture2D
-
-      # def initialize(@name, @description, @x, @y, @texture, @collusion = true)
-      # end
+      # Here we handle the first level, we will make a few entities and then pass them to the level class
+      # Table is a class that inherits from Entity
       test = Table.new(
         name: "Table",
         description: "A table, Nothing special about it, it's a bit dirty, maybe you should clean it",
-        x: 500,
-        y: 500,
+        x: 700,
+        y: 700,
         texture: Raylib.load_texture("assets/images/table.png"),
-        collusion: true
+        collision: true
       )
 
       enteties = Array(Entity).new

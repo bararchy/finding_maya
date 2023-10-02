@@ -23,7 +23,7 @@ module FindingMaya
 
     property last_direction : String = "right"
 
-    getter? collusion : Bool = true
+    getter? collision : Bool = true
 
     # rectangle
     getter rectangle : Raylib::Rectangle

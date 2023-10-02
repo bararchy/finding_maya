@@ -12,7 +12,7 @@ module FindingMaya
     getter description : String
     property x : Int32
     property y : Int32
-    getter? collusion : Bool
+    getter? collision : Bool
 
     # Set the texture for the entity
     @texture : Raylib::Texture2D
@@ -20,7 +20,7 @@ module FindingMaya
     # rectangle
     getter rectangle : Raylib::Rectangle
 
-    def initialize(@name, @description, @x, @y, @texture, @collusion = true)
+    def initialize(@name, @description, @x, @y, @texture, @collision = true)
       @rectangle = Raylib::Rectangle.new(x: @x, y: @y, width: @texture.width, height: @texture.height)
     end
 
