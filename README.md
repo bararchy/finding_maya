@@ -1,18 +1,14 @@
 # Finding Maya
 
-TODO: Write a description here
+This is a fan game based on World of Darkness.
 
 ## Installation
 
-TODO: Write installation instructions here
+You an either build it from source or download the latest release from the [releases page](https://github.com/bararchy/finding_maya/releases).
 
 ## Usage
 
-TODO: Write usage instructions here
-
-## Development
-
-TODO: Write development instructions here
+Y'know, just play :)
 
 ## Contributing
 
@@ -24,4 +20,5 @@ TODO: Write development instructions here
 
 ## Contributors
 
-- [Bar Hofesh](https://github.com/bararchy) - creator and maintainer
+- [Bar Hofesh](https://github.com/bararchy) - Code and Story
+- [Reagan](https://twitter.com/LonelyAardvark) - Art and Story
