@@ -42,12 +42,12 @@ jobs:
           Remove-Item -Path "bin\rsrc" -Recurse -Force
           Copy-Item -Path "rsrc" -Destination "bin\rsrc" -Recurse -Force
           Remove-Item -Path "bin\rsrc\_dev" -Recurse -Force
+          Copy-Item -Path "libs\*.dll" -Destination "bin\" -Recurse -Force
       - name: Copy resources
         run: |
           Copy-Item -Path "assets" -Destination "bin\assets" -Recurse -Force
       - name: Zip
         run: Compress-Archive -Path "bin/*" -DestinationPath windows-release.zip
-
       - uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
