@@ -12,6 +12,7 @@ module FindingMaya
     enum Scene
       MAIN_MENU
       CHAR_CREATION
+      INTRO
       LEVEL1
       LEVEL2
       LEVEL3
@@ -37,6 +38,8 @@ module FindingMaya
           main_menu
         when Scene::CHAR_CREATION
           char_creation
+        when Scene::INTRO
+          intro
         when Scene::LEVEL1
           level1
         when Scene::LEVEL2
@@ -206,8 +209,78 @@ module FindingMaya
         end
         Raylib.end_drawing
       end
-      @scene = Scene::LEVEL1
+      @scene = Scene::INTRO
       @player = player
+    end
+
+    def intro
+      return unless player = @player
+      # Here we handle the intro, this will be a cutscene, where Maya will talk via the commlink
+      # with the player, then the player will be able to move to the first level.
+
+      # First, we need to clean the screen and set it to black, the player right now is
+      # waking up in a dark room, so we need to set the background to black
+      # Maya's talking will be just text, so we need to create a text box
+      waking_up = <<-EOF
+        You wake up in a dark room, you can't see anything, you feel a bit dizzy,
+        you try to remember what happened, but you can't, you don't remember anything.
+        Suddenly a static noise from somewhere, like an old speaker coming to life *ZZZ*
+        and you hear a woman's voice speaking to you
+        EOF
+
+      maya_dialog_1 = <<-EOF
+        ???: Hello #{player.name}, this is your conscience speaking…
+        #{player.name}: What's going on?
+        ???: Do you remember that one time, when you did that really, really, excruciatingly embarrassing thing?
+        #{player.name}: What?!
+        ???: Yeah, you know the one… The one where you–
+        #{player.name}: No!!!!
+        ???: Oh, fine!  You were more fun when you were sleeping.
+        #{player.name}: Sleeping?
+        ???: Uh, yeah, bestie, you’ve been out for like, a month or something.
+        #{player.name}: A month?!
+        ???: Okay, maybe it was more like 72 hours, but it felt like a month. I lowkey thought you’d never wake up, to be honest.
+        EOF
+
+      maya_dialog_2 = <<-EOF
+        ???: Yeah, I was like, getting pretty nervous, actually.
+        ???: But you’re up now!  So we can get started.
+        ???: Oh, and you can like.. Stop talking.  I can’t hear anything you’re saying anyway.
+        ???: Y’know, because I’m a speaker.  Now, let’s get you out of here.
+        EOF
+
+      maya_dialog_end = <<-EOF
+        ???: First task! Find a way out of this room.  There’s three options.
+        ???: One!  Use your big brain and that computer to your left to figure out a way to bypass that digital lock on the door.
+        ???: Two, you can snatch up that handy dandy IV pole and just bust a bitch open.
+        ???: Or! Three, you can climb up into that nifty little air vent across from your bed and hope you come out the other side.
+        ???: So?  What’ll it be?
+        EOF
+
+      texts = [waking_up, maya_dialog_1, maya_dialog_2]
+      texts.each do |text|
+        loop do
+          Raylib.begin_drawing
+          Raylib.clear_background(Raylib::BLACK)
+          last_index = 0
+          text.each_line.with_index do |line, index|
+            if line.starts_with?("#{player.name}")
+              Raylib.draw_text(line, 0, 0 + (index * 20), 20, Raylib::RED)
+            elsif line.starts_with?("???")
+              Raylib.draw_text(line, 0, 0 + (index * 20), 20, Raylib::GREEN)
+            else
+              Raylib.draw_text(line, 0, 0 + (index * 20), 20, Raylib::WHITE)
+            end
+            last_index = index
+          end
+          # print the (Press Enter to continue)
+          Raylib.draw_text("(Press Enter to continue)", 0, 0 + (last_index * 40), 20, Raylib::WHITE)
+          Raylib.end_drawing
+          break if Raylib.key_pressed?(Raylib::KeyboardKey::Enter)
+        end
+      end
+
+      @scene = Scene::LEVEL1
     end
 
     def level1
