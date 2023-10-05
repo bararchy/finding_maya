@@ -287,24 +287,38 @@ module FindingMaya
       return unless player = @player
       # Here we handle the first level, we will make a few entities and then pass them to the level class
       # Table is a class that inherits from Entity
-      test = Table.new(
-        name: "Table",
-        description: "A table, Nothing special about it, it's a bit dirty, maybe you should clean it",
+      computer = Computer.new(
+        player: player,
         x: 700,
         y: 700,
-        texture: Raylib.load_texture(Path["assets", "images", "table.png"].to_native.to_s),
         collision: true
       )
 
+      door = Door.new(
+        player: player,
+        x: 700,
+        y: 100,
+        collision: true
+      )
+
+      level_done = Proc(Bool).new do
+        door.state == Door::State::Opened
+      end
+
+      computer.linked_entity = door
+
       enteties = Array(Entity).new
-      enteties << test
+      enteties << computer
+      enteties << door
 
       level = Level.new(
         background: Raylib.load_texture(Path["assets", "images", "level1.png"].to_native.to_s),
         player: player,
-        entities: enteties
+        entities: enteties,
+        level_done: level_done
       )
       level.play
+      @scene = Scene::MAIN_MENU
     end
 
     def stop

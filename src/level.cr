@@ -8,7 +8,7 @@ module FindingMaya
     # this class will implement the generic logic needed for all levels
     alias Element = Entity # NPC
     PLAYER_WALK_SPEED    =  5
-    INTERACTION_DISTANCE = 10
+    INTERACTION_DISTANCE = 15
 
     getter player : Player
 
@@ -19,9 +19,12 @@ module FindingMaya
     @min_x : Int32
     @min_y : Int32
 
+    @level_done : Proc(Bool)
+
     def initialize(
       @background : Raylib::Texture2D,
       @player : Player,
+      @level_done : Proc(Bool),
       @items : Array(Item) = Array(Item).new,
       @entities : Array(Entity) = Array(Entity).new
     )
@@ -70,6 +73,7 @@ module FindingMaya
         end
         break if Raylib.key_pressed?(Raylib::KeyboardKey::Escape)
         break if Raylib.close_window?
+        # break if @level_done.call
       end
     end
 
@@ -77,12 +81,12 @@ module FindingMaya
       # This method will check if the player is colliding with an element
       # If the player is colliding with an element, it will call the interact method of the element
       # If the player is not colliding with an element, it will do nothing
-      if element = colliding_with
+      if element = nearby_elements
         element.interact
       end
     end
 
-    def colliding_with : Element?
+    def nearby_elements : Element?
       # This method will check all the elements in the level and return the first element that is colliding with the player
       # It will be used to check for interactions, like talking to an NPC or picking up an item.
       # Note that we do not allow the player to acctually collide with an element is shown in the move_player method
@@ -105,21 +109,24 @@ module FindingMaya
           @player.move_to(x: old_x, y: old_y)
           return element
         end
-        # we will move the player down
+        # we will move the player down, we need to restore the player position first
+        @player.move_to(x: old_x, y: old_y)
         @player.move_by(y: INTERACTION_DISTANCE)
         if Raylib.check_collision_recs?(@player.rectangle, element.rectangle)
           # Now we restore the player position
           @player.move_to(x: old_x, y: old_y)
           return element
         end
-        # we will move the player left
+        # we will move the player left, we need to restore the player position first
+        @player.move_to(x: old_x, y: old_y)
         @player.move_by(x: -INTERACTION_DISTANCE)
         if Raylib.check_collision_recs?(@player.rectangle, element.rectangle)
           # Now we restore the player position
           @player.move_to(x: old_x, y: old_y)
           return element
         end
-        # we will move the player right
+        # we will move the player right, we need to restore the player position first
+        @player.move_to(x: old_x, y: old_y)
         @player.move_by(x: INTERACTION_DISTANCE)
         if Raylib.check_collision_recs?(@player.rectangle, element.rectangle)
           # Now we restore the player position
@@ -143,7 +150,16 @@ module FindingMaya
       old_x = @player.x
       old_y = @player.y
       @player.move_by(x: x, y: y)
-      will_collide = @all_objects.any? { |element| Raylib.check_collision_recs?(@player.rectangle, element.rectangle) }
+      will_collide = @all_objects.any? do |element|
+        # we check if the element is a collision element
+        # if it is, we check if the player is colliding with it
+        # if it is not, we return false
+        if element.collision?
+          Raylib.check_collision_recs?(@player.rectangle, element.rectangle)
+        else
+          false
+        end
+      end
       # Now we restore the player position
       @player.move_to(x: old_x, y: old_y)
       will_collide
